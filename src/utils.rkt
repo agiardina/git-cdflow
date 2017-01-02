@@ -75,7 +75,13 @@
       [(eqv? char 'return) (select (sort selected <) items)])))
 
 (define (release-name name)
-  (cond [re]))
+  (let* ([sname (if (number? name) (number->string name) name)]
+         [vname (if (regexp-match #rx"^[v|V].*" sname) (string-downcase sname) (string-append "v" sname))])
+    (cond
+      [(regexp-match #px"^v[0-9]{1,3}$" vname) (string-append vname ".0.0")]
+      [(regexp-match #px"^v[0-9]{1,2}\\.[0-9]{1,2}$" vname) (string-append vname ".0")]
+      [(regexp-match #px"^v[0-9]{1,2}\\.[0-9]{1,2}\\.[0-9]{1,2}$" vname) vname]
+      [else #f])))
 
 ;(select '(1 2) '("a" "b" "c"))
 ;(show-menu "Scegli quello che vuoi?" (list "ciao" "come" "stai") 0)
