@@ -1,13 +1,18 @@
 #lang racket/base
 
-(require charterm)
-(require racket/system)
+(require charterm
+         racket/system
+         racket/string
+         (only-in racket/port with-output-to-string))
 
-(define (sh command [param #f])
-  (if (string? param)
-    (system* (find-executable-path command) param)
-    (system* (find-executable-path command))
-    ))
+(provide sh->string)
+
+(define (sh->string command)
+  (with-output-to-string (lambda () (system command))))
+
+(define (sh->list command)
+  (string-split (sh->string command) "\n"))
+
 
 (define (menu items n-active)
   (let ([active (list-ref items n-active)])
