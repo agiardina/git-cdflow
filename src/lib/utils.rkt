@@ -3,12 +3,15 @@
 (require charterm
          racket/system
          racket/string
+         racket/list
          (only-in racket/port with-output-to-string))
 
 (provide (all-defined-out))
 
-(define (err m)
-  (display m))
+(define (err m [callback #f])
+  (printf "\033[0;31m~a\033[0m\n" m)
+  (cond
+    [callback (callback)]))
 
 (define (list<? l1 l2)
   (cond
@@ -16,6 +19,9 @@
     [(< (car l1) (car l2)) #t]
     [(> (car l1) (car l2)) #f]
     [else (list<? (cdr l1) (cdr l2))]))
+
+(define (take-upto l n)
+  (take l (min n (length l))))
 
 (define (sh->string command)
   (with-output-to-string (lambda () (system command))))
