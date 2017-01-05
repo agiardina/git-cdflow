@@ -8,8 +8,9 @@
 
 (define version "git cdflow version 0.0.1")
 
+
 (define help #<<MESSAGE
-usage: git cdflow <subcommand>
+usage: git cdflow <subcomand>
 
 Available subcommands are:
    feature   Manage your feature branches.

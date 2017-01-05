@@ -5,14 +5,23 @@
          racket/string
          (only-in racket/port with-output-to-string))
 
-(provide sh->string)
+(provide (all-defined-out))
+
+(define (err m)
+  (display m))
+
+(define (list<? l1 l2)
+  (cond
+    [(equal? l1 '()) #t]
+    [(< (car l1) (car l2)) #t]
+    [(> (car l1) (car l2)) #f]
+    [else (list<? (cdr l1) (cdr l2))]))
 
 (define (sh->string command)
   (with-output-to-string (lambda () (system command))))
 
 (define (sh->list command)
   (string-split (sh->string command) "\n"))
-
 
 (define (menu items n-active)
   (let ([active (list-ref items n-active)])
