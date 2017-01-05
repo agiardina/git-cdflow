@@ -6,6 +6,7 @@
          racket/system
          racket/string
          racket/list
+         racket/file
          "lib/utils.rkt"
          "lib/release.rkt")
 
@@ -20,25 +21,6 @@ MESSAGE
 
 (define sh-release-list
   "git branch -r | egrep -i \"release/v[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$\" | cut -d/ -f3")
-
-(define (release-branch version)
-  (cond
-    [(release-name version) (string-append "release/" (release-name version))]
-    [else #f]))
-
-;move to lib
-(define (version->list version)
-  (map string->number
-    (string-split
-      (substring (release-name version) 1)
-      ".")))
-
-;move to lib
-(define (sort-releases releases [reverse #f])
-  (sort releases (lambda (x y)
-    (if reverse
-      (not (list<? (version->list x) (version->list y)))
-      (list<? (version->list x) (version->list y))))))
 
 (define (release-branches)
   (sh->list "git branch -r | egrep -i \"release/v[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$\" | cut -d/ -f3"))
@@ -63,8 +45,13 @@ MESSAGE
   (display (sh->string sh-release-list)))
 
 (define (git-create-release start version)
-  (system (format "git checkout ~a" start))
-  (display version))
+  ;(system (format "git checkout ~a" start))
+  (git-branch-from start (release-branch version))
+  (display-to-file
+    (replace-clj-project-version (file->string "project.clj") version)
+    "project.clj"
+    #:exists 'replace
+    ))
 
 (define (display-help)
   (display help))

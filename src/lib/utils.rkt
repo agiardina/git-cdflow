@@ -4,6 +4,7 @@
          racket/system
          racket/string
          racket/list
+         racket/format
          (only-in racket/port with-output-to-string))
 
 (provide (all-defined-out))
@@ -94,14 +95,21 @@
       [(eqv? char #\space) (show-multichoice-menu title items active (toggle active selected))]
       [(eqv? char 'return) (select (sort selected <) items)])))
 
-(define (release-name name)
-  (let* ([sname (if (number? name) (number->string name) name)]
-         [vname (if (regexp-match #rx"^[v|V].*" sname) (string-downcase sname) (string-append "v" sname))])
-    (cond
-      [(regexp-match #px"^v[0-9]{1,3}$" vname) (string-append vname ".0.0")]
-      [(regexp-match #px"^v[0-9]{1,2}\\.[0-9]{1,2}$" vname) (string-append vname ".0")]
-      [(regexp-match #px"^v[0-9]{1,2}\\.[0-9]{1,2}\\.[0-9]{1,2}$" vname) vname]
-      [else #f])))
+(define (git-checkout-branch branch-name)
+  (system (format "git checkout ~a" branch-name)))
+
+(define (git-branch branch-name)
+  (system (format "git branch ~a" branch-name)))
+
+(define (git-notes-start-from from to)
+  (system
+    (format "git notes --ref cdflow append -m \"[~a -> ~a]\"" from to)))
+
+(define (git-branch-from from to)
+  (git-checkout-branch from)
+  (git-branch to)
+  (git-checkout-branch to)
+  (git-notes-start-from from to))
 
 ;(select '(1 2) '("a" "b" "c"))
 ;(show-menu "Scegli quello che vuoi?" (list "ciao" "come" "stai") 0)
