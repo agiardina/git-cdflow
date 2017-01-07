@@ -44,14 +44,52 @@ MESSAGE
 (define (show-releases)
   (display (sh->string sh-release-list)))
 
-(define (git-create-release start version)
-  ;(system (format "git checkout ~a" start))
-  (git-branch-from start (release-branch version))
+(define (project-file filename)
+  (let ([files (sh->list (format "find . -name '~a'" filename))])
+    (cond
+      [(equal? files '()) #f]
+      [(= (length files) 1) (car files)]
+      [(> (length files) 1) (show-menu
+                              "Select the project file to update"
+                              (cons "NONE" files) 1)])))
+
+(define (project.clj)
+  (project-file "project.clj"))
+
+(define (project-clj-set-version file version)
   (display-to-file
-    (replace-clj-project-version (file->string "project.clj") version)
+    (replace-clj-project-version (file->string file) version)
     "project.clj"
-    #:exists 'replace
-    ))
+    #:exists 'replace))
+
+(define (handle-clojure-project version)
+  (let ([file (project.clj)])
+    (cond [file (project-clj-set-version file version)
+                (git-commit file "Version updated")]
+          [else #f])))
+
+(define (pom.xml)
+  (project-file "pom.xml"))
+
+(define (pom-set-version file version)
+  (system
+    (format "cd `dirname ~a` && mvn versions:set -DnewVersion='~a'"
+      file (version-snapshot version))))
+
+(define (git-commit-versionset-modified)
+  (map (lambda (item)
+    (substring item 0 (- (string-length item) 15)))
+    (sh->list "find . -iname 'pom.xml.versionsBackup'")))
+
+(define (handle-maven-project version)
+  (let ([file (pom.xml)])
+    (cond [file (pom-set-version file version)
+                (git-commit-versionset-modified)])))
+
+(define (git-create-release start version)
+  (git-branch-from start (release-branch version))
+  (or (handle-clojure-project version)
+      (handle-maven-project version)))
 
 (define (display-help)
   (display help))
@@ -75,9 +113,11 @@ MESSAGE
       [(equal? action "list") (show-releases)]
       [(equal? action "start") (create-release version base)]
       )
+
   ))
 
-(main)
+(void (main))
+;(git-commit-versionset-modified)
 ;(sort-releases '("v10.0.0" "v8.5.0" "v9.0.2" "v10.1.0") )
 ;(release-exists? "9")
 

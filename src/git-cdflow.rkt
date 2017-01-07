@@ -26,7 +26,7 @@ MESSAGE
 (define subcommands '("feature" "release" "hotfix"))
 
 (define (subcommand command params)
-  (system (string-join (cons (string-append "git-cdflow-" command) params))))
+  (void (system (string-join (cons (string-append "git-cdflow-" command) params)))))
 
 ; Main Body
 (define args (vector->list (current-command-line-arguments)))

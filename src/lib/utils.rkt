@@ -39,7 +39,7 @@
           (printf "    \033[90m~a\033[0m\n" item)))
         items)))
 
-(define (show-menu title items n-active)
+(define (show-menu title items [n-active 0])
   (with-charterm (charterm-clear-screen))
 
   (printf "~a\n\n" title)
@@ -54,7 +54,8 @@
     (cond
       [(eqv? char 'down) (show-menu title items next)]
       [(eqv? char 'up) (show-menu title items prev)]
-      [(eqv? char 'return) (list-ref items n-active)])))
+      [(eqv? char 'return) (let ([val (list-ref items n-active)])
+                             (if (string=? val "NONE") #f val))])))
 
 
 (define (multichoice-menu items active selected)
@@ -100,6 +101,9 @@
 
 (define (git-branch branch-name)
   (system (format "git branch ~a" branch-name)))
+
+(define (git-commit file message)
+  (system (format "git commit -m \"~a\" ~a" message file)))
 
 (define (git-notes-start-from from to)
   (system
