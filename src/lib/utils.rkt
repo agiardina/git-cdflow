@@ -11,8 +11,10 @@
 
 (define (err m [callback #f])
   (printf "\033[0;31m~a\033[0m\n" m)
-  (cond
-    [callback (callback)]))
+  (cond [callback (callback)]))
+
+(define (sh command)
+  (cond [(not (system command)) (exit)]))
 
 (define (list<? l1 l2)
   (cond
@@ -25,7 +27,7 @@
   (take l (min n (length l))))
 
 (define (sh->string command)
-  (with-output-to-string (lambda () (system command))))
+  (with-output-to-string (lambda () (sh command))))
 
 (define (sh->list command)
   (string-split (sh->string command) "\n"))
@@ -97,25 +99,25 @@
       [(eqv? char 'return) (select (sort selected <) items)])))
 
 (define (git-checkout-branch branch-name)
-  (system (format "git checkout ~a" branch-name)))
+  (sh (format "git checkout ~a" branch-name)))
 
 (define (git-branch branch-name)
-  (system (format "git branch ~a" branch-name)))
+  (sh (format "git branch ~a" branch-name)))
 
 (define (git-add files)
   (for-each (lambda (file)
-    (system (format "git add \"~a\"" file)))
+    (sh (format "git add \"~a\"" file)))
     (if (string? files) `(,files) files)))
 
 (define (git-commit files message)
   (git-add files)
-  (system (format "git commit -m \"~a\"" message)))
+  (sh (format "git commit -m \"~a\"" message)))
 
 (define (git-pull)
-  (system "git pull"))
+  (sh "git pull"))
 
 (define (git-notes-start-from from to)
-  (system
+  (sh
     (format "git notes --ref cdflow append -m \"[~a -> ~a]\"" from to)))
 
 (define (git-branch-from from to)

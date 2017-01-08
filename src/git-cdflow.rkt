@@ -6,19 +6,18 @@
 (require racket/system)
 (require racket/string)
 
-(define version "git cdflow version 0.0.1")
+(define version "git-cdflow version 0.0.1")
 
 
 (define help #<<MESSAGE
-usage: git cdflow <subcomand>
+usage: git cdflow <command>
 
-Available subcommands are:
+Available command are:
    feature   Manage your feature branches.
    release   Manage your release branches.
-   hotfix    Manage your hotfix branches.
    version   Shows version information.
 
-Try 'git cdflow <subcommand> help' for details.
+Try 'git cdflow <command> help' for details.
 
 MESSAGE
 )

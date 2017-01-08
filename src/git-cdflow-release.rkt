@@ -12,9 +12,9 @@
 
 (define help #<<MESSAGE
 
-usage: git flow release help
-       git flow release list
-       git flow release start <version> [<base>]
+usage: git cdflow release help
+       git cdflow release list
+       git cdflow release start <version> [<base>]
 
 MESSAGE
 )
@@ -72,7 +72,7 @@ MESSAGE
   (project-file "pom.xml"))
 
 (define (pom-set-version file version)
-  (system
+  (sh
     (format "cd `dirname ~a` && mvn versions:set -DnewVersion='~a'"
       file (version-snapshot version))))
 
@@ -84,10 +84,14 @@ MESSAGE
 (define (git-commit-versionset-modified)
   (git-commit (versionset-modified) "Version number updated"))
 
+(define (remove-versionset-backup-files)
+  (sh "find . -name \"pom.xml.versionsBackup\" -delete"))
+
 (define (handle-maven-project version)
   (let ([file (pom.xml)])
     (cond [file (pom-set-version file version)
-                (git-commit-versionset-modified)])))
+                (git-commit-versionset-modified)
+                (remove-versionset-backup-files)])))
 
 (define (git-create-release start version)
   (git-branch-from start (release-branch version))
@@ -114,10 +118,7 @@ MESSAGE
     (cond
       [(equal? action "help") (display help)]
       [(equal? action "list") (show-releases)]
-      [(equal? action "start") (create-release version base)]
-      )
-
-  ))
+      [(equal? action "start") (create-release version base)])))
 
 (void (main))
 ;(git-commit-versionset-modified)
