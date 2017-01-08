@@ -65,7 +65,7 @@ MESSAGE
 (define (handle-clojure-project version)
   (let ([file (project.clj)])
     (cond [file (project-clj-set-version file version)
-                (git-commit file "Version updated")]
+                (git-commit file "Version number updated")]
           [else #f])))
 
 (define (pom.xml)
@@ -76,10 +76,13 @@ MESSAGE
     (format "cd `dirname ~a` && mvn versions:set -DnewVersion='~a'"
       file (version-snapshot version))))
 
-(define (git-commit-versionset-modified)
+(define (versionset-modified)
   (map (lambda (item)
     (substring item 0 (- (string-length item) 15)))
     (sh->list "find . -iname 'pom.xml.versionsBackup'")))
+
+(define (git-commit-versionset-modified)
+  (git-commit (versionset-modified) "Version number updated"))
 
 (define (handle-maven-project version)
   (let ([file (pom.xml)])

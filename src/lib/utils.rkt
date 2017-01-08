@@ -102,8 +102,17 @@
 (define (git-branch branch-name)
   (system (format "git branch ~a" branch-name)))
 
-(define (git-commit file message)
-  (system (format "git commit -m \"~a\" ~a" message file)))
+(define (git-add files)
+  (for-each (lambda (file)
+    (system (format "git add \"~a\"" file)))
+    (if (string? files) `(,files) files)))
+
+(define (git-commit files message)
+  (git-add files)
+  (system (format "git commit -m \"~a\"" message)))
+
+(define (git-pull)
+  (system "git pull"))
 
 (define (git-notes-start-from from to)
   (system
@@ -111,6 +120,7 @@
 
 (define (git-branch-from from to)
   (git-checkout-branch from)
+  (git-pull)
   (git-branch to)
   (git-checkout-branch to)
   (git-notes-start-from from to))
