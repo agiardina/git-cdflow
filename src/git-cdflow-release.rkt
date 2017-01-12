@@ -12,9 +12,27 @@
 
 (define help #<<MESSAGE
 
-usage: git cdflow release help
-       git cdflow release list
+usage: git cdflow release list
        git cdflow release start <version> [<base>]
+
+       list   Show the list of release branches available on origin.
+              Local branches are ignored and branches with wrong syntax are
+              ignored. In order to be considered a valid release branch,
+              the branch has to match the following name convention:
+              release/v[major].[minor].[maintenance], eg. release/v9.1.0
+
+        start Start a new release.
+              The <version> parameter is mandatory but it's possible
+              to specify partial version name.
+              All the following version names are valid: v8.2.3, 8, 8.2, 8.2.3.
+              In all the above scenarios the branch release/v8.2.3 will be
+              created.
+
+              The <base> parameter is optional and it's intended for automation.
+              In case the base parameter is missing, a menu will be displayed to
+              to user in order to choose the release to branch from. The release
+              to branch from must be present on origin and it has to follow the
+              right name convention (see list command)
 
 MESSAGE
 )
@@ -94,9 +112,15 @@ MESSAGE
                 (remove-versionset-backup-files)])))
 
 (define (git-create-release start version)
-  (git-branch-from start (release-branch version))
-  (or (handle-clojure-project version)
-      (handle-maven-project version)))
+  (let ([new-branch (release-branch version)])
+    (git-branch-from start new-branch)
+
+    (or (handle-clojure-project version)
+        (handle-maven-project version))
+
+    (git-push-origin new-branch)
+
+    ))
 
 (define (display-help)
   (display help))
@@ -121,12 +145,3 @@ MESSAGE
       [(equal? action "start") (create-release version base)])))
 
 (void (main))
-;(git-commit-versionset-modified)
-;(sort-releases '("v10.0.0" "v8.5.0" "v9.0.2" "v10.1.0") )
-;(release-exists? "9")
-
-
-;(branch-from)
-;(release-branches)
-;(show-release-from-menu (release-branches))
-;(display help)

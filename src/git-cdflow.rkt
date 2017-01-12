@@ -15,6 +15,7 @@ usage: git cdflow <command>
 Available command are:
    feature   Manage your feature branches.
    release   Manage your release branches.
+   inherit   Inherit changes from parent branch.
    version   Shows version information.
 
 Try 'git cdflow <command> help' for details.

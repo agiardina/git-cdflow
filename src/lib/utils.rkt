@@ -127,6 +127,5 @@
   (git-checkout-branch to)
   (git-notes-start-from from to))
 
-;(select '(1 2) '("a" "b" "c"))
-;(show-menu "Scegli quello che vuoi?" (list "ciao" "come" "stai") 0)
-;(show-multichoice-menu "Quale saluto preferisci?" (list "ciao" "come stai" "buongiorno") 0 '(0))
+(define (git-push-origin branch)
+  (sh (format "git push -u origin ~a" branch)))
