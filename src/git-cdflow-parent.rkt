@@ -1,0 +1,65 @@
+#! /usr/bin/env racket
+
+#lang racket/base
+
+(require racket/cmdline
+         racket/match
+         racket/string
+         "lib/utils.rkt"
+         "lib/release.rkt")
+
+(define help #<<MESSAGE
+usage: git cdflow parent show
+       git cdflow parent set <parent-branch>
+       git cdflow parent pull
+
+       show   If the current branch has a parent branch the command show it.
+              The parent branch is automatically set when a new feature or
+              a new release branch has been created with git cdflow.
+              The parent branch can be set with the *cdflow parent set* command.
+
+       set    Set the parent branch of the current one.
+              Example: git cdflow parent set release/v8.0.0
+
+       pull   Fetch the changes from the parent branch and merge in the current
+              one.
+
+MESSAGE
+)
+
+(define (rgx-parent name)
+  (pregexp (format "([\\w\\./]*) -> ~a\\]" (regexp-quote name))))
+
+(define (parent-match name str)
+  (let
+    ([match (regexp-match (rgx-parent name) str)])
+    (if match (cadr match) #f)))
+
+(define (get-parent)
+  (ormap (lambda (l)
+    (parent-match (git-current-branch) (cadr l)))
+    (git-objects-notes)))
+
+(define (show)
+  (let ([parent (get-parent)])
+    (if parent
+      (displayln parent)
+      (display-err "Parent has not been set.
+Use git cdflow parent set <branch> to set parent branch.
+
+Try 'git cdflow parent help' for details.
+
+"))))
+
+(define (main)
+  (let-values (
+    [(action params)
+      (command-line
+        #:args (action . params)
+        (values action params))])
+
+    (cond
+      [(equal? action "help") (display help)]
+      [(equal? action "show") (show)])))
+
+(void (main))

@@ -13,6 +13,9 @@
   (printf "\033[0;31m~a\033[0m\n" m)
   (cond [callback (callback)]))
 
+(define (display-err msg)
+  (display msg (current-error-port)))
+
 (define (sh command)
   (cond [(not (system command)) (exit)]))
 
@@ -101,6 +104,9 @@
 (define (git-checkout-branch branch-name)
   (sh (format "git checkout ~a" branch-name)))
 
+(define (git-current-branch)
+  (car (sh->list "git rev-parse --abbrev-ref HEAD")))
+
 (define (git-branch branch-name)
   (sh (format "git branch ~a" branch-name)))
 
@@ -115,6 +121,22 @@
 
 (define (git-pull)
   (sh "git pull"))
+
+(define (git-notes)
+  (sh->list "git log --show-notes=cdflow"))
+
+(define (git-objects-with-notes)
+    (map (lambda (row)
+      (cadr (string-split row " ")))
+      (sh->list "git notes --ref=cdflow")))
+
+(define (git-object-show-notes obj)
+  (sh->string (format "git notes --ref=cdflow show ~a" obj)))
+
+(define (git-objects-notes)
+  (map (lambda (obj)
+    (list obj (git-object-show-notes obj)))
+    (git-objects-with-notes)))
 
 (define (git-notes-start-from from to)
   (sh
