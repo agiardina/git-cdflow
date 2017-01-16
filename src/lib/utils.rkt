@@ -8,7 +8,7 @@
          (only-in racket/port with-output-to-string))
 
 (provide (all-defined-out))
-
+  
 (define (err m [callback #f])
   (printf "\033[0;31m~a\033[0m\n" m)
   (cond [callback (callback)]))
@@ -28,6 +28,12 @@
 
 (define (take-upto l n)
   (take l (min n (length l))))
+
+(define (string->list str)
+  (string-split str "\n"))
+
+(define (list->string lst)
+  (string-join lst "\n"))
 
 (define (sh->string command)
   (with-output-to-string (lambda () (sh command))))
@@ -141,6 +147,9 @@
 (define (git-notes-start-from from to)
   (sh
     (format "git notes --ref cdflow append -m \"[~a -> ~a]\"" from to)))
+
+(define (git-notes-replace notes object)
+  (sh (format "git notes --ref cdflow add -f -m \"~a\" ~a" notes object)))
 
 (define (git-branch-from from to)
   (git-checkout-branch from)

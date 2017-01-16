@@ -27,14 +27,6 @@ usage: git cdflow parent show
 MESSAGE
 )
 
-(define (rgx-parent name)
-  (pregexp (format "([\\w\\./]*) -> ~a\\]" (regexp-quote name))))
-
-(define (parent-match name str)
-  (let
-    ([match (regexp-match (rgx-parent name) str)])
-    (if match (cadr match) #f)))
-
 (define (get-parent)
   (ormap (lambda (l)
     (parent-match (git-current-branch) (cadr l)))
@@ -50,6 +42,24 @@ Use git cdflow parent set <branch> to set parent branch.
 Try 'git cdflow parent help' for details.
 
 "))))
+(define (set-parent parent)
+  (filter
+    (lambda (l) (not (parent-match (git-current-branch) l)))
+    (string->list
+      (git-object-show-notes "adf4358b9db228b8d418f3deed88895c6bc70d20"))))
+
+(define (try-set-parent params)
+  (cond
+    [(equal? params '())
+      (display-err "Missing <parent-branch> parameter.\n\n")
+      (display-err help)]
+    [(> (length params) 1)
+      (display-err "Too many parameters.\n\n")
+      (display-err help)]
+    [(string=? (car params) (git-current-branch))
+      (display-err "In order to be parent of yourself create first a time machine!!!\n\n")
+      (display-err help)]
+    [else (set-parent (car params))]))
 
 (define (main)
   (let-values (
@@ -60,6 +70,5 @@ Try 'git cdflow parent help' for details.
 
     (cond
       [(equal? action "help") (display help)]
+      [(equal? action "set") (try-set-parent params)]
       [(equal? action "show") (show)])))
-
-(void (main))
