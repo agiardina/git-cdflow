@@ -144,19 +144,26 @@
     (list obj (git-object-show-notes obj)))
     (git-objects-with-notes)))
 
-(define (git-notes-start-from from to)
+(define (git-notes-add-parent from to)
   (sh
     (format "git notes --ref cdflow append -m \"[~a -> ~a]\"" from to)))
 
 (define (git-notes-replace notes object)
   (sh (format "git notes --ref cdflow add -f -m \"~a\" ~a" notes object)))
 
+(define (git-notes-push)
+  (sh "git push origin refs/notes/cdflow"))
+
 (define (git-branch-from from to)
   (git-checkout-branch from)
   (git-pull)
   (git-branch to)
   (git-checkout-branch to)
-  (git-notes-start-from from to))
+  (git-notes-add-parent from to))
+
+(define (git-fetch)
+  (sh "git fetch origin")
+  (sh "git fetch origin \"refs/notes/*:refs/notes/*\""))
 
 (define (git-push-origin branch)
   (sh (format "git push -u origin ~a" branch)))

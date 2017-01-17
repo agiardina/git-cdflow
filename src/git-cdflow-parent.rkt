@@ -6,12 +6,12 @@
          racket/match
          racket/string
          "lib/utils.rkt"
-         "lib/release.rkt")
+         "lib/parent.rkt")
 
 (define help #<<MESSAGE
-usage: git cdflow parent show
-       git cdflow parent set <parent-branch>
-       git cdflow parent pull
+usage: git cdflow parent [-l|--local] show
+       git cdflow parent [-l|--local] set <parent-branch>
+       git cdflow parent [-l|--local] pull
 
        show   If the current branch has a parent branch the command show it.
               The parent branch is automatically set when a new feature or
@@ -24,8 +24,15 @@ usage: git cdflow parent show
        pull   Fetch the changes from the parent branch and merge in the current
               one.
 
+OPTIONS
+       -l, --local
+           The command does not run a git fetch and a git push.
+  
+
 MESSAGE
-)
+  )
+
+(define fetch? (make-parameter #t))
 
 (define (get-parent)
   (ormap (lambda (l)
@@ -33,6 +40,7 @@ MESSAGE
     (git-objects-notes)))
 
 (define (show)
+  (cond [(fetch?) (git-fetch)])
   (let ([parent (get-parent)])
     (if parent
       (displayln parent)
@@ -42,11 +50,16 @@ Use git cdflow parent set <branch> to set parent branch.
 Try 'git cdflow parent help' for details.
 
 "))))
+
+(define (pull)
+  (cond [(fetch?) (git-fetch)])
+  (sh (format "git merge origin/~a" (get-parent))))
+
 (define (set-parent parent)
-  (filter
-    (lambda (l) (not (parent-match (git-current-branch) l)))
-    (string->list
-      (git-object-show-notes "adf4358b9db228b8d418f3deed88895c6bc70d20"))))
+  (cond [(fetch?) (git-fetch)])
+  (git-notes-remove-parent (git-current-branch))
+  (git-notes-add-parent parent (git-current-branch))
+  (git-notes-push))
 
 (define (try-set-parent params)
   (cond
@@ -65,10 +78,16 @@ Try 'git cdflow parent help' for details.
   (let-values (
     [(action params)
       (command-line
-        #:args (action . params)
+       #:once-each
+       [("-l" "--local") "No fetch before running the command"
+                       (fetch? #f)]
+       #:args (action . params)
         (values action params))])
 
     (cond
       [(equal? action "help") (display help)]
+      [(equal? action "pull") (pull)]
       [(equal? action "set") (try-set-parent params)]
       [(equal? action "show") (show)])))
+
+(void (main))

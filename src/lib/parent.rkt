@@ -33,14 +33,3 @@
              (length clean-note))
           (git-notes-replace (list->string clean-note) id)])
        )) (git-objects-notes)))
-
-
-
-(define (test)
-  (current-directory "/Users/agiardina/dev/uhc-b2b-dev")
-  ;(git-objects-notes)
-  (git-notes-remove-parent "release/v103.0.0")
-  (git-objects-notes)
-  )
-
-(test)
