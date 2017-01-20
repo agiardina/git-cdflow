@@ -67,14 +67,15 @@ MESSAGE
 (define (show-releases)
   (display (sh->string sh-release-list)))
 
-(define (project-file filename)
+(define (select-file filename title)
   (let ([files (sh->list (format "find . -name '~a'" filename))])
     (cond
       [(equal? files '()) #f]
-      [(= (length files) 1) (car files)]
-      [(> (length files) 1) (show-menu
-                              "Select the project file to update"
-                              (cons "NONE" files) 1)])))
+      ;[(= (length files) 1) (car files)]
+      [(> (length files) 0) (show-menu title (cons "NONE" files) 1)])))
+
+(define (project-file filename)
+  (select-file filename "Select the project file to update"))
 
 (define (project.clj)
   (project-file "project.clj"))
@@ -94,10 +95,14 @@ MESSAGE
 (define (pom.xml)
   (project-file "pom.xml"))
 
-(define (pom-set-version file version)
-  (sh
-    (format "cd `dirname ~a` && mvn versions:set -DnewVersion='~a'"
-      file (version-snapshot version))))
+(define (settings.xml)
+  (select-file "settings.xml" "Do you want to use a custom settings.xml?"))
+
+(define (pom-set-version file version [settings #f])
+  (let ([new-version (version-snapshot version)])
+    (sh (cond
+       [settings (format "mvn -f ~a versions:set -DnewVersion='~a' --settings ~a" file new-version settings)]
+       [else (format "mvn -f ~a versions:set -DnewVersion='~a'" file new-version)]))))
 
 (define (versionset-modified)
   (map (lambda (item)
@@ -111,21 +116,20 @@ MESSAGE
   (sh "find . -name \"pom.xml.versionsBackup\" -delete"))
 
 (define (handle-maven-project version)
-  (let ([file (pom.xml)])
-    (cond [file (pom-set-version file version)
+  (let ([file (pom.xml)]
+        [settings (settings.xml)])
+    (cond [file (pom-set-version file version settings)
                 (git-commit-versionset-modified)
                 (remove-versionset-backup-files)])))
 
 (define (git-create-release start version)
   (let ([new-branch (release-branch version)])
     (git-branch-from start new-branch)
-
+    ;Set project version 
     (or (handle-clojure-project version)
         (handle-maven-project version))
-
     (git-push-origin new-branch)
-
-    ))
+    (git-notes-push)))
 
 (define (display-help)
   (display help))

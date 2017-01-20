@@ -41,6 +41,9 @@
 (define (sh->list command)
   (string-split (sh->string command) "\n"))
 
+(define (sh->bool command)
+  (system command))
+
 (define (menu items n-active)
   (let ([active (list-ref items n-active)])
     (map
@@ -114,7 +117,7 @@
   (car (sh->list "git rev-parse --abbrev-ref HEAD")))
 
 (define (git-branch branch-name)
-  (sh (format "git branch ~a" branch-name)))
+  (sh (format "git checkout -b ~a" branch-name)))
 
 (define (git-add files)
   (for-each (lambda (file)
