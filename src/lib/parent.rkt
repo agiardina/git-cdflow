@@ -17,6 +17,11 @@
     ([match (regexp-match (rgx-parent name) str)])
     (if match (cadr match) #f)))
 
+(define (get-parent)
+  (ormap (lambda (l)
+    (parent-match (git-current-branch) (cadr l)))
+    (git-objects-notes)))
+
 (define (notes-filter-out-parent notes branch)
   (filter
    (lambda (line) (not (parent-match branch line)))

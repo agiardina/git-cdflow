@@ -116,6 +116,9 @@
 (define (git-current-branch)
   (car (sh->list "git rev-parse --abbrev-ref HEAD")))
 
+(define (git-checkout-remote-branch-to remote-branch-name local-branch-name)
+  (sh (format "git checkout -b ~a origin/~a" local-branch-name remote-branch-name)))
+
 (define (git-branch branch-name)
   (sh (format "git checkout -b ~a" branch-name)))
 
@@ -157,6 +160,12 @@
 (define (git-notes-push)
   (sh "git push origin refs/notes/cdflow"))
 
+(define (git-remote-branch-exists branch-name)
+  (sh->bool (format "git show-ref refs/remotes/origin/~a" branch-name)))
+
+(define (git-local-branch-exists branch-name)
+  (sh->bool (format "git show-ref refs/heads/~a" branch-name)))
+
 (define (git-branch-from from to)
   (git-checkout-branch from)
   (git-pull)
@@ -164,9 +173,22 @@
   (git-checkout-branch to)
   (git-notes-add-parent from to))
 
+(define (git-files-to-commit)
+  (sh->list "git status --untracked-files=no --porcelain"))
+
 (define (git-fetch)
   (sh "git fetch origin")
-  (sh "git fetch origin \"refs/notes/*:refs/notes/*\""))
+  (sh "git fetch origin \"refs/notes/cdflow:refs/notes/origin/cdflow\"")
+  (sh "git notes merge -v origin/cdflow"))
 
+;Push the current branch to origin with the branch name passed
 (define (git-push-origin branch)
-  (sh (format "git push -u origin ~a" branch)))
+  (git-notes-push)
+  (sh (format "git push -u origin HEAD:~a" branch)))
+
+(define (git-merge from)
+  (sh (format "git merge ~a" from)))
+
+(define (git-merge-from-to from to)
+  (git-checkout-branch to)
+  (git-merge from))

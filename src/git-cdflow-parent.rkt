@@ -34,11 +34,6 @@ MESSAGE
 
 (define fetch? (make-parameter #t))
 
-(define (get-parent)
-  (ormap (lambda (l)
-    (parent-match (git-current-branch) (cadr l)))
-    (git-objects-notes)))
-
 (define (show)
   (cond [(fetch?) (git-fetch)])
   (let ([parent (get-parent)])
