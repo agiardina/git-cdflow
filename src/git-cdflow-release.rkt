@@ -174,7 +174,6 @@ MESSAGE
       [(equal? action "list") (show-releases)]
       [(equal? action "checkout") (checkout version)]
       [(equal? action "push") (push)]
-      [(equal? action "test") (test)]
       [(equal? action "start") (create-release version base)])))
 
 (void (main))
