@@ -13,7 +13,7 @@
 (define help #<<MESSAGE
 
 usage: git cdflow release list
-       git cdflow release start <version> [<base>]
+       git cdflow release start [--no-push] <version> [<base>]
 
        list            Show the list of release branches available on origin.                         
                        Local branches are ignored and branches with wrong syntax are                  
@@ -42,6 +42,8 @@ usage: git cdflow release list
 
 MESSAGE
 )
+
+(define push? (make-parameter #t))
 
 (define sh-release-list
   "git branch -r | egrep -i \"release/v[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$\" | cut -d/ -f3")
@@ -129,8 +131,9 @@ MESSAGE
     ;Set project version 
     (or (handle-clojure-project version)
         (handle-maven-project version))
-    (git-push-origin new-branch)
-    (git-notes-push)))
+    (cond
+      [(push?) (git-push-origin new-branch)
+               (git-notes-push)])))
 
 (define (display-help)
   (display help))
@@ -144,16 +147,25 @@ MESSAGE
       (git-fetch)
       (git-create-release (branch-release-from base) version)]))
 
-(define (checkout version)
+(define (checkout version)  
   (cond
     [(not version) (display-err "Missing version.\nUsage: git cdflow checkout <version-number>\n")]
     [else  (void (git-fetch))
-          (git-checkout-branch (release-branch version))]))
+           (git-checkout-branch (release-branch version))]))
+
+(define (push)
+  (cond
+    [(release-branch? (git-current-branch)) 
+       (git-push-origin (git-current-branch))
+       (git-notes-push)]
+    [else (display-err "You are not in a release branch.\n")]))
 
 (define (main)
   (let-values (
     [(action version base)
       (command-line
+        #:once-each
+        [("--no-push") "The release will not be pushed on origin." (push? #f)]
         #:args (action [version #f] [base #f])
         (values action version base))])
 
@@ -161,6 +173,8 @@ MESSAGE
       [(equal? action "help") (display help)]
       [(equal? action "list") (show-releases)]
       [(equal? action "checkout") (checkout version)]
+      [(equal? action "push") (push)]
+      [(equal? action "test") (test)]
       [(equal? action "start") (create-release version base)])))
 
 (void (main))
