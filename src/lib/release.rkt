@@ -40,3 +40,12 @@
     str
     (format "\\1\"~a\"" (version-snapshot version))
     ))
+
+(define (replace-node-project-version str version)
+  (display version)
+  (regexp-replace
+   #px"(\"version\"\\s*:\\s*)\"([\\w\\.\\-]*)\""
+   str
+  (format "\\1\"~a\"" (version-snapshot version))
+   )
+  )

@@ -67,15 +67,15 @@ MESSAGE
 (define (show-releases)
   (display (sh->string sh-release-list)))
 
-(define (select-file filename title)
-  (let ([files (sh->list (format "find . -name '~a'" filename))])
+(define (select-file filename title [exclude #f])
+  (let ([files (sh->list (format "find . ~a -name '~a'" (if exclude (string-append "-not -path */" exclude "/*") "") filename))])
     (cond
       [(equal? files '()) #f]
       ;[(= (length files) 1) (car files)]
       [(> (length files) 0) (show-menu title (cons "NONE" files) 1)])))
 
-(define (project-file filename)
-  (select-file filename "Select the project file to update"))
+(define (project-file filename [exclude #f])
+  (select-file filename "Select the project file to update" exclude))
 
 (define (project.clj)
   (project-file "project.clj"))
@@ -90,6 +90,25 @@ MESSAGE
   (let ([file (project.clj)])
     (cond [file (project-clj-set-version file version)
                 (git-commit file "Version number updated")]
+          [else #f])))
+
+;;; Handling node projects
+
+(define (project-node-set-version file version)
+  (display-to-file
+    (replace-node-project-version (file->string file) version)
+    "package.json"
+    #:exists 'replace))
+
+(define (package.json)
+  (project-file "package.json" "node_modules"))
+
+(define (handle-node-project version)
+  (let ([file (package.json)])
+    (cond [file (project-node-set-version file version)
+                ;;(git-commit file "Version number updated")
+                (display (file->string file))
+                ]
           [else #f])))
 
 (define (pom.xml)
@@ -127,9 +146,11 @@ MESSAGE
     (git-branch-from start new-branch)
     ;Set project version 
     (or (handle-clojure-project version)
-        (handle-maven-project version))
+        (handle-maven-project version)
+        (handle-node-project version))
     (git-push-origin new-branch)
-    (git-notes-push)))
+    (git-notes-push)
+))
 
 (define (display-help)
   (display help))
@@ -142,6 +163,8 @@ MESSAGE
     [else (git-create-release (branch-release-from base) version)]))
 
 (define (main)
+
+  ;; (handle-node-project "3")
   (let-values (
     [(action version base)
       (command-line
@@ -151,6 +174,7 @@ MESSAGE
     (cond
       [(equal? action "help") (display help)]
       [(equal? action "list") (show-releases)]
-      [(equal? action "start") (create-release version base)])))
+      [(equal? action "start") (create-release version base)]))
+  )
 
 (void (main))
