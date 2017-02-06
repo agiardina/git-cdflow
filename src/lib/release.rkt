@@ -34,6 +34,9 @@
 (define (version-snapshot version)
   (string-append (substring (release-name version) 1) "-SNAPSHOT"))
 
+(define (release-branch? branch)
+  (regexp-match #px"^release\\/v[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}" branch))
+
 (define (replace-clj-project-version str version)
   (regexp-replace
     #px"(defproject\\s+[\\w\\-]+\\s+)\"([\\w\\.\\-]+)\""

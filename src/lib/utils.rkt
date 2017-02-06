@@ -178,8 +178,8 @@
 
 (define (git-fetch)
   (sh "git fetch origin")
-  (sh "git fetch origin \"refs/notes/cdflow:refs/notes/origin/cdflow\"")
-  (sh "git notes merge -v origin/cdflow"))
+  (system "git fetch origin \"refs/notes/cdflow:refs/notes/origin/cdflow\" 2>/dev/null")
+  (system "git notes --ref cdflow merge -s theirs origin/cdflow 2>/dev/null"))
 
 ;Push the current branch to origin with the branch name passed
 (define (git-push-origin branch)

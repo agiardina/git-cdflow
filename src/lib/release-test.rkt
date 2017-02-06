@@ -15,3 +15,5 @@
  (check-equal? (replace-clj-project-version
               "(defproject  \t\nuhc-edq-crm-service\t\n \"2.0.0-SNAPSHOT\"" 3)
               "(defproject  \t\nuhc-edq-crm-service\t\n \"3.0.0-SNAPSHOT\"" 3)
+
+(check-equal? (release-branch? "release/v10.2.122") '("release/v10.2.122"))

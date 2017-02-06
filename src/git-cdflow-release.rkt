@@ -13,34 +13,37 @@
 (define help #<<MESSAGE
 
 usage: git cdflow release list
-       git cdflow release start <version> [<base>]
+       git cdflow release start [--no-push] <version> [<base>]
 
-       list   Show the list of release branches available on origin.
-              Local branches are ignored and branches with wrong syntax are
-              ignored. In order to be considered a valid release branch,
-              the branch has to match the following name convention:
-              release/v[major].[minor].[maintenance], eg. release/v9.1.0
+       list            Show the list of release branches available on origin.                         
+                       Local branches are ignored and branches with wrong syntax are                  
+                       ignored. In order to be considered a valid release branch,                     
+                       the branch has to match the following name convention:                         
+                       release/v[major].[minor].[maintenance], eg. release/v9.1.0                     
+                                                                                                      
+        start          Start a new release.                                                           
+                       The <version> parameter is mandatory but it's possible                         
+                       to specify partial version name.                                               
+                       All the following version names are valid: v8.2.3, 8, 8.2, 8.2.3.              
+                       In all the above scenarios the branch release/v8.2.3 will be                   
+                       created.                                                                       
+                                                                                                      
+                       The <base> parameter is optional and it's intended for automation.             
+                                                                                                      
+                       In case the base parameter is missing, a menu will be displayed to             
+                       to user in order to choose the release to branch from. The release             
+                       to branch from must be present on origin and it has to follow the              
+                       right name convention (see "git cdflow release list")                          
+                                                                                                      
+                       Example usage:                                                                 
+                       git cdflow release start 10                                                    
 
-        start Start a new release.
-              The <version> parameter is mandatory but it's possible
-              to specify partial version name.
-              All the following version names are valid: v8.2.3, 8, 8.2, 8.2.3.
-              In all the above scenarios the branch release/v8.2.3 will be
-              created.
-
-              The <base> parameter is optional and it's intended for automation.
-              
-              In case the base parameter is missing, a menu will be displayed to
-              to user in order to choose the release to branch from. The release
-              to branch from must be present on origin and it has to follow the
-              right name convention (see "git cdflow release list")
-
-              Example usage:
-              git cdflow release start 10
-
+         checkout      Checkout a release branch.
 
 MESSAGE
 )
+
+(define push? (make-parameter #t))
 
 (define sh-release-list
   "git branch -r | egrep -i \"release/v[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$\" | cut -d/ -f3")
@@ -146,11 +149,10 @@ MESSAGE
     (git-branch-from start new-branch)
     ;Set project version 
     (or (handle-clojure-project version)
-        (handle-maven-project version)
-        (handle-node-project version))
-    (git-push-origin new-branch)
-    (git-notes-push)
-))
+        (handle-maven-project version))
+    (cond
+      [(push?) (git-push-origin new-branch)
+               (git-notes-push)])))
 
 (define (display-help)
   (display help))
@@ -160,7 +162,22 @@ MESSAGE
     [(not version) (err "Missing release version" display-help)]
     [(release-exists? version) (err "Release already exists")]
     [(not (release-name version)) (err "Invalid release name")]
-    [else (git-create-release (branch-release-from base) version)]))
+    [else
+      (git-fetch)
+      (git-create-release (branch-release-from base) version)]))
+
+(define (checkout version)  
+  (cond
+    [(not version) (display-err "Missing version.\nUsage: git cdflow checkout <version-number>\n")]
+    [else  (void (git-fetch))
+           (git-checkout-branch (release-branch version))]))
+
+(define (push)
+  (cond
+    [(release-branch? (git-current-branch)) 
+       (git-push-origin (git-current-branch))
+       (git-notes-push)]
+    [else (display-err "You are not in a release branch.\n")]))
 
 (define (main)
 
@@ -168,13 +185,16 @@ MESSAGE
   (let-values (
     [(action version base)
       (command-line
+        #:once-each
+        [("--no-push") "The release will not be pushed on origin." (push? #f)]
         #:args (action [version #f] [base #f])
         (values action version base))])
 
     (cond
       [(equal? action "help") (display help)]
       [(equal? action "list") (show-releases)]
-      [(equal? action "start") (create-release version base)]))
-  )
+      [(equal? action "checkout") (checkout version)]
+      [(equal? action "push") (push)]
+      [(equal? action "start") (create-release version base)])))
 
 (void (main))

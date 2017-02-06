@@ -9,8 +9,8 @@
          "lib/parent.rkt")
 
 (define help #<<MESSAGE
-usage: git cdflow parent [-l|--local] show
-       git cdflow parent [-l|--local] set <parent-branch>
+usage: git cdflow parent show
+       git cdflow parent set <parent-branch>
        git cdflow parent [-l|--local] pull
 
        show   If the current branch has a parent branch the command show it.
@@ -35,7 +35,6 @@ MESSAGE
 (define fetch? (make-parameter #t))
 
 (define (show)
-  (cond [(fetch?) (git-fetch)])
   (let ([parent (get-parent)])
     (if parent
       (displayln parent)
@@ -51,7 +50,7 @@ Try 'git cdflow parent help' for details.
   (sh (format "git merge origin/~a" (get-parent))))
 
 (define (set-parent parent)
-  (cond [(fetch?) (git-fetch)])
+  (git-fetch)
   (git-notes-remove-parent (git-current-branch))
   (git-notes-add-parent parent (git-current-branch))
   (git-notes-push))
