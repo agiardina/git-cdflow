@@ -149,7 +149,8 @@ MESSAGE
     (git-branch-from start new-branch)
     ;Set project version 
     (or (handle-clojure-project version)
-        (handle-maven-project version))
+        (handle-maven-project version)
+        (handle-node-project version))
     (cond
       [(push?) (git-push-origin new-branch)
                (git-notes-push)])))
