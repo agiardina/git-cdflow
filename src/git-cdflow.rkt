@@ -6,7 +6,7 @@
 (require racket/system)
 (require racket/string)
 
-(define version "git-cdflow version 0.0.2-SNAPSHOT")
+(define version "git-cdflow version 0.0.2")
 
 
 (define help #<<MESSAGE
@@ -23,7 +23,7 @@ Try 'git cdflow <command> help' for details.
 MESSAGE
 )
 
-(define subcommands '("feature" "release" "parent"))
+(define subcommands '("feature" "release" "parent" "issue"))
 
 (define (subcommand command params)
   (void (system (string-join (cons (string-append "git-cdflow-" command) params)))))

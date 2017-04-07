@@ -50,11 +50,6 @@ MESSAGE
     [(regexp-match #px"^feature\\/" feature-name) feature-name]
     [else (format "feature/~a" feature-name)]))
 
-(define (create-feature-branch feature-branch)
-  (let ([current-branch (git-current-branch)])
-    (git-branch feature-branch)
-    (git-notes-add-parent current-branch feature-branch)))
-
 (define (start feature-name)
   (cond
     [feature-name (create-feature-branch (get-feature-branch feature-name))]
