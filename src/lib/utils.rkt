@@ -8,7 +8,9 @@
          (only-in racket/port with-output-to-string))
 
 (provide (all-defined-out))
-  
+
+(define (get-settings-folder) (expand-user-path "~/.cdflow"))
+
 (define (err m [callback #f])
   (printf "\033[0;31m~a\033[0m\n" m)
   (cond [callback (callback)]))
@@ -153,6 +155,10 @@
 (define (git-notes-add-parent from to)
   (sh
     (format "git notes --ref cdflow append -m \"[~a -> ~a]\"" from to)))
+
+(define (git-notes-add-issue-tracker-url url)
+  (sh
+    (format "git notes --ref cdflow append -m \"[issue-tracker-url :: ~a]\"" url)))
 
 (define (git-notes-replace notes object)
   (sh (format "git notes --ref cdflow add -f -m \"~a\" ~a" notes object)))
