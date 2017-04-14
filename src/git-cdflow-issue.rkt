@@ -7,6 +7,7 @@
 (require racket/string)
 (require "lib/utils.rkt"
          "lib/issue.rkt"
+         "lib/parent.rkt"
          "lib/feature.rkt")
 
 (define-values (in out) (make-pipe))
@@ -161,6 +162,10 @@ MESSAGE
   (let* ([data (format "{\"issue\":{\"status_id\":\"~a\"}}" (get-issue-note "status-in-progress"))])
     (call-tracker-api "PUT" (format "issues/~a.json" id) "" data)))
 
+(define (resolve-issue id)
+  (let* ([data (format "{\"issue\":{\"status_id\":\"~a\"}}" (get-issue-note "status-resolved"))])
+    (call-tracker-api "PUT" (format "issues/~a.json" id) "" data)))
+
 (define (get-my-issues-list)
   (if (is-configuration-ok?)
     (let* ([query (string-append "assigned_to_id=me&sort=fixed_version:desc,priority:desc&status_id=" (get-issue-note "status-open"))]
@@ -169,15 +174,41 @@ MESSAGE
            [item (show-menu "Select the issue to close" (map (lambda (s) (build-issue-row s)) issues) 0)]
            [issue-name-list (map (lambda (s) (string-downcase (string-replace (string-replace s "[" "") "]" ""))) (cdr (string-split item)))]
            [issue-id (car issue-name-list)]
-           [new-feature-name (string-join issue-name-list "-")])
+           [new-feature-name (string-append "feature/" (string-join issue-name-list "-"))])
 
            (clear-terminal-screen)
-           (display (string-append "Starting feature " new-feature-name "\n"))
+
+           (if (feature-branch? (git-current-branch))
+             (let []
+                  (git-checkout-branch (get-parent))
+                  (git-pull))
+             #f)
+
+           (display (string-append "Starting " new-feature-name "\n"))
+
            (put-issue-inprogress issue-id)
-           (create-feature-branch (string-append "feature/" new-feature-name))
+
+           (if (git-local-branch-exists new-feature-name)
+              (git-checkout-branch new-feature-name)
+              (create-feature-branch new-feature-name))
+
            (open-browser-page (string-append (get-issue-note "url") "/issues/" issue-id))
       )
       (display "Project Issue Tracker not configured!\nRun: git cdflow issue config\n")))
+
+(define (issue-resolve)
+  (if (feature-branch? (git-current-branch))
+    (let* ([feature (git-current-branch)]
+           [issue-id (cadr (string-split (car (string-split (git-current-branch) "-")) "/"))])
+
+         (display (string-append "Resolving " feature "\n"))
+         (resolve-issue issue-id)
+         (git-checkout-branch (get-parent))
+         (git-merge feature)
+         (git-delete-branch feature)
+         (git-push-origin (git-current-branch))
+    )
+    (display-err "\nYou are not in a feature branch, linked with any issue!\n\n")))
 
 (define (main)
   (let-values (
@@ -189,6 +220,7 @@ MESSAGE
     (cond
       [(equal? action "help") (display help)]
       [(equal? action "list") (get-my-issues-list)]
+      [(equal? action "resolve") (issue-resolve)]
       [(equal? action "config") (issue-configuration)]
       [(equal? action "status") (issue-status)]
       )))

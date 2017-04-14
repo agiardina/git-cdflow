@@ -203,5 +203,8 @@
   (git-checkout-branch to)
   (git-merge from))
 
+(define (git-delete-branch branch)
+  (sh (format "git branch -d ~a" branch)))
+
 (define (open-browser-page url)
   (sh (string-append "open " url)))

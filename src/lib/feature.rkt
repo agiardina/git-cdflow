@@ -10,3 +10,7 @@
   (let ([current-branch (git-current-branch)])
     (git-branch feature-branch)
     (git-notes-add-parent current-branch feature-branch)))
+
+
+(define (feature-branch? branch)
+  (regexp-match #px"^feature\\/" branch))    
