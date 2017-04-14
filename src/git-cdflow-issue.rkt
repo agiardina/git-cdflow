@@ -5,8 +5,6 @@
 (require racket/cmdline)
 (require racket/system)
 (require racket/string)
-(require net/http-client)
-(require json)
 (require "lib/utils.rkt"
          "lib/issue.rkt")
 
@@ -30,20 +28,35 @@ usage: git cdflow issue list
 MESSAGE
   )
 
+(define (display-insert-setting-label label)
+  (display (string-append label " (enter to confirm, empty string will be ignored) \n")))
+
 (define (configure-issue-url)
   (let []
-    (display "Insert Issue Tracker URL: \n")
+    (display-insert-setting-label "Insert Issue Tracker URL:")
     (define url (read-line))
     (if (non-empty-string? url)
       (let []
         (git-fetch)
-        (git-notes-remove-tracker-url)
-        (git-notes-add-issue-tracker-url url)
+        (git-notes-remove-issue "url")
+        (git-notes-add-issue-note "url" url)
+        (git-notes-push))
+        #f)))
+
+(define (configure-issue-project)
+  (let []
+    (display-insert-setting-label "Insert Issue Tracker Project:")
+    (define project (read-line))
+    (if (non-empty-string? project)
+      (let []
+        (git-fetch)
+        (git-notes-remove-issue "project")
+        (git-notes-add-issue-note "project" project)
         (git-notes-push))
         #f)))
 
 (define (configure-api-key)
-  (display "Insert Issue Tracker Api Key: \n")
+  (display-insert-setting-label "Insert Issue Tracker Api Key:")
   (define key (read-line))
   (if (non-empty-string? key)
     (let []
@@ -51,16 +64,58 @@ MESSAGE
       (save-setting "apikey" key))
       #f))
 
+(define (select-issue-status statuses type)
+  (let* ([item (show-menu
+                 (format "Select the \"~a\" status from the list:\n" type)
+                 (map (lambda (s) (string-append (format "~a : ~a" (hash-ref s 'id) (hash-ref s 'name)))) statuses)
+                 0)])
+    (string-trim (car (string-split item ":")))
+    ))
+
+(define (configure-issue-statuses)
+  (let* ([resp (call-tracker-api "GET" "issue_statuses.json")]
+         [statuses (hash-ref resp 'issue_statuses)]
+         [open (select-issue-status statuses "OPEN")]
+         [in-progress (select-issue-status statuses "IN PROGRESS")]
+         [resolved (select-issue-status statuses "RESOLVED")])
+
+    (clear-terminal-screen)
+
+    (display "Pushing settings...\n")
+
+    (git-fetch)
+
+    (git-notes-remove-issue "status-open")
+    (git-notes-remove-issue "status-in-progress")
+    (git-notes-remove-issue "status-resolved")
+
+    (git-notes-add-issue-note "status-open" open)
+    (git-notes-add-issue-note "status-in-progress" in-progress)
+    (git-notes-add-issue-note "status-resolved" resolved)
+
+    (git-notes-push)))
+
 (define (issue-configuration)
   (configure-issue-url)
+  (configure-issue-project)
   (configure-api-key)
+
+  (if (and (is-set-tracker-note? "url") (is-set-tracker-note? "project") (is-set-apikey?))
+    (configure-issue-statuses)
+    #f
+  )
   (issue-status))
 
 (define (issue-status)
   (display "ISSUE TRACKER SETUP\n\n")
   (display "[Redmine URL]: \t")
-  (if (is-set-tracker-url?)
-    (display (get-tracker-url))
+  (if (is-set-tracker-note? "url")
+    (display (get-issue-note "url"))
+    (display "-"))
+
+  (display "\n[Project]: \t")
+  (if (is-set-tracker-note? "project")
+    (display (get-issue-note "project"))
     (display "-"))
 
   (display "\n[API Key]: \t")
@@ -68,33 +123,37 @@ MESSAGE
     (display (get-setting "apikey"))
     (display "-"))
 
-  (display "\n\nStatus: ")
-  (if (and (is-set-tracker-url?) (is-set-apikey?))
+  (display "\n[open]: \t")
+  (if (is-set-tracker-note? "status-open")
+    (display (get-issue-note "status-open"))
+    (display "-"))
+
+  (display "\n[in-progress]: \t")
+  (if (is-set-tracker-note? "status-in-progress")
+    (display (get-issue-note "status-in-progress"))
+    (display "-"))
+
+  (display "\n[resolved]: \t")
+  (if (is-set-tracker-note? "status-resolved")
+    (display (get-issue-note "status-resolved"))
+    (display "-"))
+
+  (display "\n\nCONFIGURATION: ")
+  (if (and
+        (is-set-tracker-note? "url")
+        (is-set-tracker-note? "project")
+        (is-set-apikey?)
+        (is-set-tracker-note? "status-open")
+        (is-set-tracker-note? "status-in-progress")
+        (is-set-tracker-note? "status-resolved")
+        )
     (display "OK\n\n")
     (display "Not Ready! Run: git cdflow issue config\n\n")
-  )
+  ))
+
+(define (get-my-issues-list)
+  (display "asdasda")
 )
-
-(define (put-issue-inprogress issue_id endpoint key)
-  (http-sendrecv "projects.hoverstate.com"
-                 (string-append "/issues/" issue_id ".json&key=" key)
-                 #:ssl? #t
-                 ;#:port 8888
-                 #:method #"PUT"
-                 #:headers (list "Content-Type: application/json")
-                 #:data "{\"issue\":{\"status_id\":\"2\"}}"))
-
-;(let-values   ([(status headers port) (http-sendrecv "projects.hoverstate.com" "/issues.json?status_id=9&project_id=82&key=1baae9438c564e80319b0d5bb1372d2b38fb7885&assigned_to_id=me" #:ssl? #t )])
-;  (let* ([menu-items (map (lambda (issue)
-;                  (string-append "#" (number->string (hash-ref issue 'id)) " - " (hash-ref issue 'subject)))
-;                          (hash-ref (read-json port) 'issues))]
-;         [item (show-menu "Select the issue to close" menu-items 0)]
-;         [issue (substring item 0 6)]
-;         [issue_id (substring item 1 6)])
-;
-;    (create-feature-branch (string-append "feature/" issue))
-;    (put-issue-inprogress issue_id "projects.hoverstate.com" "1baae9438c564e80319b0d5bb1372d2b38fb7885")))
-
 
 (define (main)
   (let-values (
@@ -105,12 +164,9 @@ MESSAGE
 
     (cond
       [(equal? action "help") (display help)]
-      [(equal? action "list") (display "TODO")]
+      [(equal? action "list") (get-my-issues-list)]
       [(equal? action "config") (issue-configuration)]
       [(equal? action "status") (issue-status)]
-
-      ;[(equal? action #f) (display (git-objects-notes))]
-
       )))
 
 (void (main))

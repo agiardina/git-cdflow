@@ -55,8 +55,11 @@
           (printf "    \033[90m~a\033[0m\n" item)))
         items)))
 
+(define (clear-terminal-screen)
+  (with-charterm (charterm-clear-screen)))
+
 (define (show-menu title items [n-active 0])
-  (with-charterm (charterm-clear-screen))
+  (clear-terminal-screen)
 
   (printf "~a\n\n" title)
   (menu items n-active)
@@ -97,7 +100,7 @@
   (foldr (lambda (id ret) (cons (list-ref l id) ret)) '() idx))
 
 (define (show-multichoice-menu title items active selected)
-  (with-charterm (charterm-clear-screen))
+  (clear-terminal-screen)
 
   (printf "~a\n\n" title)
   (multichoice-menu items active selected)
@@ -156,9 +159,10 @@
   (sh
     (format "git notes --ref cdflow append -m \"[~a -> ~a]\"" from to)))
 
-(define (git-notes-add-issue-tracker-url url)
-  (sh
-    (format "git notes --ref cdflow append -m \"[issue-tracker-url :: ~a]\"" url)))
+(define (git-notes-add-issue-note type url)
+  (let ([note-key (string-append "issue-tracker-" type)])
+    (sh
+      (format "git notes --ref cdflow append -m \"[~a :: ~a]\"" note-key url))))
 
 (define (git-notes-replace notes object)
   (sh (format "git notes --ref cdflow add -f -m \"~a\" ~a" notes object)))
