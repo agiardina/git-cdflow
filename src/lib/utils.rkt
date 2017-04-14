@@ -202,3 +202,6 @@
 (define (git-merge-from-to from to)
   (git-checkout-branch to)
   (git-merge from))
+
+(define (open-browser-page url)
+  (sh (string-append "open " url)))

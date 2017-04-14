@@ -6,7 +6,8 @@
 (require racket/system)
 (require racket/string)
 (require "lib/utils.rkt"
-         "lib/issue.rkt")
+         "lib/issue.rkt"
+         "lib/feature.rkt")
 
 (define-values (in out) (make-pipe))
 
@@ -106,6 +107,18 @@ MESSAGE
   )
   (issue-status))
 
+(define (is-configuration-ok?)
+  (if (and
+        (is-set-tracker-note? "url")
+        (is-set-tracker-note? "project")
+        (is-set-apikey?)
+        (is-set-tracker-note? "status-open")
+        (is-set-tracker-note? "status-in-progress")
+        (is-set-tracker-note? "status-resolved")
+        )
+    #t
+    #f))
+
 (define (issue-status)
   (display "ISSUE TRACKER SETUP\n\n")
   (display "[Redmine URL]: \t")
@@ -139,21 +152,32 @@ MESSAGE
     (display "-"))
 
   (display "\n\nCONFIGURATION: ")
-  (if (and
-        (is-set-tracker-note? "url")
-        (is-set-tracker-note? "project")
-        (is-set-apikey?)
-        (is-set-tracker-note? "status-open")
-        (is-set-tracker-note? "status-in-progress")
-        (is-set-tracker-note? "status-resolved")
-        )
+  (if (is-configuration-ok?)
     (display "OK\n\n")
     (display "Not Ready! Run: git cdflow issue config\n\n")
   ))
 
+(define (put-issue-inprogress id)
+  (let* ([data (format "{\"issue\":{\"status_id\":\"~a\"}}" (get-issue-note "status-in-progress"))])
+    (call-tracker-api "PUT" (format "issues/~a.json" id) "" data)))
+
 (define (get-my-issues-list)
-  (display "asdasda")
-)
+  (if (is-configuration-ok?)
+    (let* ([query (string-append "assigned_to_id=me&sort=fixed_version:desc,priority:desc&status_id=" (get-issue-note "status-open"))]
+           [resp (call-tracker-api "GET" "issues.json" query)]
+           [issues (hash-ref resp 'issues)]
+           [item (show-menu "Select the issue to close" (map (lambda (s) (build-issue-row s)) issues) 0)]
+           [issue-name-list (map (lambda (s) (string-downcase (string-replace (string-replace s "[" "") "]" ""))) (cdr (string-split item)))]
+           [issue-id (car issue-name-list)]
+           [new-feature-name (string-join issue-name-list "-")])
+
+           (clear-terminal-screen)
+           (display (string-append "Starting feature " new-feature-name "\n"))
+           (put-issue-inprogress issue-id)
+           (create-feature-branch (string-append "feature/" new-feature-name))
+           (open-browser-page (string-append (get-issue-note "url") "/issues/" issue-id))
+      )
+      (display "Project Issue Tracker not configured!\nRun: git cdflow issue config\n")))
 
 (define (main)
   (let-values (

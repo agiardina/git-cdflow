@@ -67,7 +67,7 @@
     (if (file-exists? file-path) (delete-file file-path) #f)
     (display-to-file value file-path)))
 
-(define (call-tracker-api method resource [query ""])
+(define (call-tracker-api method resource [query ""] [data ""])
   (let*-values ([(endpoint) (get-issue-note "url")]
                 [(splitted-url) (string-split endpoint "://")]
                 [(protocol) (car splitted-url)]
@@ -80,7 +80,13 @@
                                                       full-path
                                                       #:ssl? ssl
                                                       #:method method
-                                                      ;#data....
-                                                      #:headers (list "Content-Type: application/json"))])
-         (read-json port)
-  ))
+                                                      #:headers (list "Content-Type: application/json")
+                                                      #:data data)])
+
+         (read-json port)))
+
+(define (build-issue-row issue)
+  (format "~a [~a] ~a"
+          (if (hash-ref issue 'fixed_version #f) (format "[~a]" (hash-ref (hash-ref issue 'fixed_version) 'name)) "[Missing Target Version]")
+          (hash-ref issue 'id)
+          (hash-ref issue 'subject)))
