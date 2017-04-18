@@ -74,7 +74,8 @@
       [(eqv? char 'down) (show-menu title items next)]
       [(eqv? char 'up) (show-menu title items prev)]
       [(eqv? char 'return) (let ([val (list-ref items n-active)])
-                             (if (string=? val "NONE") #f val))])))
+                             (if (string=? val "NONE") #f val))]
+      [else (exit)])))
 
 
 (define (multichoice-menu items active selected)
@@ -113,7 +114,8 @@
       [(eqv? char 'down) (show-multichoice-menu title items next selected)]
       [(eqv? char 'up) (show-multichoice-menu title items prev selected)]
       [(eqv? char #\space) (show-multichoice-menu title items active (toggle active selected))]
-      [(eqv? char 'return) (select (sort selected <) items)])))
+      [(eqv? char 'return) (select (sort selected <) items)]
+      [else (exit)])))
 
 (define (git-checkout-branch branch-name)
   (sh (format "git checkout ~a" branch-name)))

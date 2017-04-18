@@ -13,14 +13,22 @@
 (define-values (in out) (make-pipe))
 
 (define help #<<MESSAGE
-usage: git cdflow issue list
+usage: git cdflow issue start
+       git cdflow issue finish
        git cdflow issue config
        git cdflow issue status
 
-       list     If a Redmine issue tracker in configured, the command will
-                show the list of issues assigned to the configured user.
-                Issues can be selected in order to start a new feature to work
-                on it.
+       start    List of all issues in the 'opened' status.
+                Select an issue from the list and create a new branch and
+                switch the working tree to feature/<issue-id>.
+
+                Put the issue in the 'in-progress' status.
+
+       finish   Switch to parent branch and merge there the current branch.
+                The parent branch is the branch that generated the current one
+                or the one that has been set with `git cdflow parent set` command.
+
+                Put the issue in the 'resolved' status.
 
        config   Start the configuration process in order to setup a Redmine
                 Issue Tracker linked with the repository.
@@ -172,9 +180,8 @@ MESSAGE
            [resp (call-tracker-api "GET" "issues.json" query)]
            [issues (hash-ref resp 'issues)]
            [item (show-menu "Select the issue to close" (map (lambda (s) (build-issue-row s)) issues) 0)]
-           [issue-name-list (map (lambda (s) (string-downcase (string-replace (string-replace s "[" "") "]" ""))) (cdr (string-split item)))]
-           [issue-id (car issue-name-list)]
-           [new-feature-name (string-append "feature/" (string-join issue-name-list "-"))])
+           [issue-id (string-replace (car (regexp-match #px"#\\d+" item)) "#" "")]
+           [new-feature-name (string-append "feature/" issue-id)])
 
            (clear-terminal-screen)
 
@@ -219,8 +226,8 @@ MESSAGE
 
     (cond
       [(equal? action "help") (display help)]
-      [(equal? action "list") (get-my-issues-list)]
-      [(equal? action "resolve") (issue-resolve)]
+      [(equal? action "start") (get-my-issues-list)]
+      [(equal? action "finish") (issue-resolve)]
       [(equal? action "config") (issue-configuration)]
       [(equal? action "status") (issue-status)]
       )))
