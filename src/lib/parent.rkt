@@ -32,7 +32,7 @@
    (lambda (row)
      (let* ([id (car row)]
            [note (string->list (cadr row))]
-           [clean-note (notes-filter-out-parent note branch)])      
+           [clean-note (notes-filter-out-parent note branch)])
        (cond
          [(> (length note)
              (length clean-note))

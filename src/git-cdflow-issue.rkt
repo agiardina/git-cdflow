@@ -181,7 +181,7 @@ MESSAGE
            [issues (hash-ref resp 'issues)]
            [item (show-menu "Select the issue to close" (map (lambda (s) (build-issue-row s)) issues) 0)]
            [issue-id (string-replace (car (regexp-match #px"#\\d+" item)) "#" "")]
-           [new-feature-name (string-append "feature/" issue-id)])
+           [new-feature-name (string-append "feature/issue-" issue-id)])
 
            (clear-terminal-screen)
 
@@ -196,26 +196,33 @@ MESSAGE
            (put-issue-inprogress issue-id)
 
            (if (git-local-branch-exists new-feature-name)
-              (git-checkout-branch new-feature-name)
+              (let []
+                (git-checkout-branch new-feature-name)
+                (git-pull))
+
               (create-feature-branch new-feature-name))
 
            (open-browser-page (string-append (get-issue-note "url") "/issues/" issue-id))
       )
       (display "Project Issue Tracker not configured!\nRun: git cdflow issue config\n")))
 
-(define (issue-resolve)
-  (if (feature-branch? (git-current-branch))
-    (let* ([feature (git-current-branch)]
-           [issue-id (cadr (string-split (car (string-split (git-current-branch) "-")) "/"))])
+(define (close-issue-branch)
+  (let* ([feature (git-current-branch)]
+         [issue-id (string-replace feature "feature/issue-" "")])
+    (display (string-append "Finishing Issue: " issue-id "\n"))
+    (resolve-issue issue-id)
+    (close-feature-branch)
+    (git-delete-branch feature)))
 
-         (display (string-append "Resolving " feature "\n"))
-         (resolve-issue issue-id)
-         (git-checkout-branch (get-parent))
-         (git-merge feature)
-         (git-delete-branch feature)
-         (git-push-origin (git-current-branch))
-    )
-    (display-err "\nYou are not in a feature branch, linked with any issue!\n\n")))
+(define (issue-finish)
+  (let ([current-branch (git-current-branch)]
+        [parent (get-parent)]
+        [files-to-commit (git-files-to-commit)])
+    (cond
+      [(not (equal? files-to-commit '())) (display-err "There are files to commit. Aborted!\n") ]
+      [(not parent) (display-err "No parent has been set, please see `git cdflow parent help`\n") ]
+      [(not (regexp-match #px"^feature\\/issue-" current-branch)) (display-err "Please move in a feature branch created from issue\n")]
+      [else (close-issue-branch)])))
 
 (define (main)
   (let-values (
@@ -227,7 +234,7 @@ MESSAGE
     (cond
       [(equal? action "help") (display help)]
       [(equal? action "start") (get-my-issues-list)]
-      [(equal? action "finish") (issue-resolve)]
+      [(equal? action "finish") (issue-finish)]
       [(equal? action "config") (issue-configuration)]
       [(equal? action "status") (issue-status)]
       )))

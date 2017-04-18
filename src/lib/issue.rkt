@@ -88,8 +88,9 @@
 (define (build-issue-row issue)
   (let* ([target-version (if (hash-ref issue 'fixed_version #f) (format "~a" (hash-ref (hash-ref issue 'fixed_version) 'name)) "[No Target]")]
          [version-num (extract-version-number target-version)])
-    (format "~a #~a - ~a"
+    (format "~a - ~a\t#~a - ~a"
             (format "[~a]" version-num)
+            (format "~a" (hash-ref (hash-ref issue 'priority) 'name))
             (hash-ref issue 'id)
             (hash-ref issue 'subject))
   ))
