@@ -86,7 +86,10 @@
          (read-json port)))
 
 (define (build-issue-row issue)
-  (format "~a [~a] ~a"
-          (if (hash-ref issue 'fixed_version #f) (format "[~a]" (hash-ref (hash-ref issue 'fixed_version) 'name)) "[Missing Target Version]")
-          (hash-ref issue 'id)
-          (hash-ref issue 'subject)))
+  (let* ([target-version (if (hash-ref issue 'fixed_version #f) (format "~a" (hash-ref (hash-ref issue 'fixed_version) 'name)) "[No Target]")]
+         [version-num (extract-version-number target-version)])
+    (format "~a #~a - ~a"
+            (format "[~a]" version-num)
+            (hash-ref issue 'id)
+            (hash-ref issue 'subject))
+  ))

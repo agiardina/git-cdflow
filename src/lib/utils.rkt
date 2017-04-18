@@ -208,3 +208,9 @@
 
 (define (open-browser-page url)
   (sh (string-append "open " url)))
+
+(define (extract-version-number str)
+  (let ([v-num (regexp-match #px"^v[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}" str)])
+    (if (and v-num (= (length v-num) 1))
+      (car v-num)
+      str)))
