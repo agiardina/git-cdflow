@@ -70,8 +70,11 @@ MESSAGE
 (define (show-releases)
   (display (sh->string sh-release-list)))
 
+(define (sort-by-depth file-list)
+  (map cdr (sort (map (lambda (e) (cons (length (regexp-split #rx"/" e)) e)) file-list) #:key car <)))
+
 (define (select-file filename title [exclude #f])
-  (let ([files (sh->list (format "find . ~a -name '~a'" (if exclude (string-append "-not -path */" exclude "/*") "") filename))])
+  (let ([files (sort-by-depth (sh->list (format "find . ~a -name '~a'" (if exclude (string-append "-not -path */" exclude "/*") "") filename)))])
     (cond
       [(equal? files '()) #f]
       ;[(= (length files) 1) (car files)]
@@ -109,8 +112,8 @@ MESSAGE
 (define (handle-node-project version)
   (let ([file (package.json)])
     (cond [file (project-node-set-version file version)
-                ;;(git-commit file "Version number updated")
-                (display (file->string file))
+                (git-commit file "Version number updated")
+                ;; (display (file->string file))
                 ]
           [else #f])))
 
@@ -138,22 +141,26 @@ MESSAGE
   (sh "find . -name \"pom.xml.versionsBackup\" -delete"))
 
 (define (handle-maven-project version)
+
   (let ([file (pom.xml)]
         [settings (settings.xml)])
     (cond [file (pom-set-version file version settings)
                 (git-commit-versionset-modified)
-                (remove-versionset-backup-files)])))
+                (remove-versionset-backup-files)]
+          [else #f])))
 
 (define (git-create-release start version)
   (let ([new-branch (release-branch version)])
     (git-branch-from start new-branch)
-    ;Set project version 
+    ;Set project version
     (or (handle-clojure-project version)
         (handle-maven-project version)
         (handle-node-project version))
+
     (cond
       [(push?) (git-push-origin new-branch)
-               (git-notes-push)])))
+               (git-notes-push)])
+    ))
 
 (define (display-help)
   (display help))
