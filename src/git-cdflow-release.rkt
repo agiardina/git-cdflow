@@ -24,16 +24,19 @@ usage: git cdflow release list
         start     Start a new release.                                                           
                   The <version> parameter is mandatory but it's possible                         
                   to specify partial version name.                                               
-                  All the following version names are valid: v8.2.3, 8, 8.2, 8.2.3.              
+                  All the following version names are valid: v8.2.3, 8, 8.2, 
+                  8.2.3.              
                   In all the above scenarios the branch release/v8.2.3 will be                   
                   created.                                                                       
                                                                                                  
-                  The <base> parameter is optional and it's intended for automation.             
+                  The <base> parameter is optional and it's intended for 
+                  automation.             
                                                                                                  
-                  In case the base parameter is missing, a menu will be displayed to             
-                  to user in order to choose the release to branch from. The release             
-                  to branch from must be present on origin and it has to follow the              
-                  right name convention (see "git cdflow release list")                          
+                  In case the base parameter is missing, a menu will be
+                  displayed to user in order to choose the release to branch 
+                  from. The release to branch from must be present on origin 
+                  and it has to follow the right name convention 
+                  (see "git cdflow release list")                          
                                                                                                  
                   Example usage:                                                                 
                   git cdflow release start 10                                                    

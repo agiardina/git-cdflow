@@ -27,16 +27,19 @@ usage: git cdflow feature start <feature-name>
 
        finish   Switch to parent branch and merge there the current branch.
                 The parent branch is the branch that generated the current one
-                or the one that has been set with `git cdflow parent set` command.
+                or the one that has been set with `git cdflow parent set` 
+                command.
 
                 Example usage:
                 git cdflow feature finish
 
-       checkout Checking out a branch updates the files in the working directory.
+       checkout Checking out a branch updates the files in the working 
+                directory.
                 In case on origin there are both a private feature branch and a
                 public one a menu will ask to the user to select the right one.
 
-       public   Push the current branch on origin: origin/feature/<feature-name>
+       public   Push the current branch on origin: 
+                origin/feature/<feature-name>
 
        private  Push the current branch on origin but on private path:
                 origin/private/feature/<feature-name>

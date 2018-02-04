@@ -16,7 +16,8 @@ usage: git cdflow parent show
        show   If the current branch has a parent branch the command show it.
               The parent branch is automatically set when a new feature or
               a new release branch has been created with git cdflow.
-              The parent branch can be set with the *cdflow parent set* command.
+              The parent branch can be set with the *cdflow parent set* 
+              command.
 
        set    Set the parent branch of the current one.
               Example: git cdflow parent set release/v8.0.0

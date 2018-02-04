@@ -5,6 +5,7 @@
          racket/string
          racket/list
          racket/format
+         racket/match
          (only-in racket/port with-output-to-string))
 
 (provide (all-defined-out))
@@ -141,21 +142,21 @@
 (define (git-pull)
   (sh "git pull"))
 
-(define (git-notes)
+(define (git-notes path)
   (sh->list "git log --show-notes=cdflow"))
 
-(define (git-objects-with-notes)
+(define (git-objects-with-notes path)
     (map (lambda (row)
       (cadr (string-split row " ")))
-      (sh->list "git notes --ref=cdflow")))
+      (sh->list (format "cd ~a; git notes --ref=cdflow" path))))
 
-(define (git-object-show-notes obj)
-  (sh->string (format "git notes --ref=cdflow show ~a" obj)))
+(define (git-object-show-notes path obj)
+  (sh->string (format "cd ~a; git notes --ref=cdflow show ~a" path obj)))
 
-(define (git-objects-notes)
+(define (git-objects-notes path)
   (map (lambda (obj)
-    (list obj (git-object-show-notes obj)))
-    (git-objects-with-notes)))
+    (list obj (git-object-show-notes path obj)))
+    (git-objects-with-notes path)))
 
 (define (git-notes-add-parent from to)
   (sh
@@ -177,6 +178,16 @@
 
 (define (git-local-branch-exists branch-name)
   (sh->bool (format "git show-ref refs/heads/~a" branch-name)))
+
+(define (git-remote-commits repo-path)
+  (map (lambda (lst) (list (string-replace (caddr lst) "refs/remotes/origin/" "") (car lst))) 
+    (map (lambda (line) (string-split line #px"[\\s]+")) 
+      (sh->list (format "git --git-dir=~a/.git for-each-ref refs/remotes/origin/" repo-path)))))
+
+(define (git-remote-branch-contains-commit? repo-path branch commit)
+  (match (sh->string (format "git --git-dir=~a/.git for-each-ref refs/remotes/origin/~a --contains=~a" repo-path branch commit))
+    [(? non-empty-string?) #t]
+    [_ #f]))
 
 (define (git-branch-from from to)
   (git-checkout-branch from)

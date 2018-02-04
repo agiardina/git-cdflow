@@ -20,7 +20,7 @@
 (define (get-parent)
   (ormap (lambda (l)
     (parent-match (git-current-branch) (cadr l)))
-    (git-objects-notes)))
+    (git-objects-notes ".")))
 
 (define (notes-filter-out-parent notes branch)
   (filter
@@ -37,4 +37,4 @@
          [(> (length note)
              (length clean-note))
           (git-notes-replace (list->string clean-note) id)])
-       )) (git-objects-notes)))
+       )) (git-objects-notes ".")))

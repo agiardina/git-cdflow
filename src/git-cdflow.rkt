@@ -2,12 +2,12 @@
 
 #lang racket/base
 
-(require racket/cmdline)
-(require racket/system)
-(require racket/string)
+(require racket/cmdline
+         racket/system
+         racket/string
+         racket/path)
 
-(define version "git-cdflow version 0.0.2")
-
+(define version "git-cdflow version 0.1.0")
 
 (define help #<<MESSAGE
 usage: git cdflow <command>
@@ -16,6 +16,8 @@ Available command are:
    feature   Manage your feature branches.
    release   Manage your release branches.
    parent    Manage updates from parent branch.
+   tree      Show information about the whole releases tree.
+   issue     Manage issues on tracker system.
    version   Shows version information.
 
 Try 'git cdflow <command> help' for details.
@@ -23,7 +25,7 @@ Try 'git cdflow <command> help' for details.
 MESSAGE
 )
 
-(define subcommands '("feature" "release" "parent" "issue"))
+(define subcommands '("feature" "release" "parent" "tree" "issue"))
 
 (define (subcommand command params)
   (void (system (string-join (cons (string-append "git-cdflow-" command) params)))))

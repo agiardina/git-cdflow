@@ -16,7 +16,7 @@
   (regexp-match (string-append "issue-tracker-" type " ::") str))
 
 (define (get-note-with-tracker-type type)
-  (let ([note (filter (lambda (l) (is-issue-note? type l)) (map (lambda (l) (cadr l)) (git-objects-notes)))])
+  (let ([note (filter (lambda (l) (is-issue-note? type l)) (map (lambda (l) (cadr l)) (git-objects-notes ".")))])
     (if (= 0 (length note)) "" (car note))))
 
 (define (clean-note-value key str)
@@ -47,7 +47,7 @@
              [clean-notes (filter (lambda (l) (not (is-issue-note? type l))) notes)])
              (cond
                [(> (length notes) (length clean-notes)) (git-notes-replace (list->string clean-notes) id)])))
-   (git-objects-notes)))
+   (git-objects-notes ".")))
 
 (define (is-set-apikey?)
   (let ([file-path (expand-user-path (build-path (get-settings-folder) "apikey"))])
