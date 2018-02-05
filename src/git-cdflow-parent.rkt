@@ -64,10 +64,13 @@ Try 'git cdflow parent help' for details.
     [(> (length params) 1)
       (display-err "Too many parameters.\n\n")
       (display-err help)]
-    [(string=? (car params) (git-current-branch))
+    [(string=? (parent-full-name (car params)) (git-current-branch))
       (display-err "In order to be parent of yourself create first a time machine!!!\n\n")
       (display-err help)]
-    [else (set-parent (car params))]))
+    [(not (git-remote-branch-exists (parent-full-name (car params))))
+      (display-err (format "Branch \"~a\"does not exists on origin.\n\n" (car params)))
+      (display-err help)]
+    [else (set-parent (parent-full-name (car params)))]))
 
 (define (main)
   (let-values (

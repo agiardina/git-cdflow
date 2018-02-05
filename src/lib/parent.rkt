@@ -5,7 +5,8 @@
 (require racket/cmdline
          racket/match
          racket/string
-         "../lib/utils.rkt")
+         "../lib/utils.rkt"
+         "../lib/release.rkt")
 
 (provide (all-defined-out))
 
@@ -22,6 +23,11 @@
     (parent-match (git-current-branch) (cadr l)))
     (git-objects-notes ".")))
 
+(define (parent-full-name parent)
+  (cond 
+    [(release-branch parent) (release-branch parent)]
+    [else parent]))
+
 (define (notes-filter-out-parent notes branch)
   (filter
    (lambda (line) (not (parent-match branch line)))
@@ -34,7 +40,7 @@
            [note (string->list (cadr row))]
            [clean-note (notes-filter-out-parent note branch)])
        (cond
-         [(> (length note)
-             (length clean-note))
-          (git-notes-replace (list->string clean-note) id)])
+         [(> (length note) (length clean-note))
+             (git-notes-replace (list->string clean-note) id)
+          ])
        )) (git-objects-notes ".")))

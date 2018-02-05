@@ -7,7 +7,7 @@
          "lib/utils.rkt")
 
 (define help #<<MESSAGE
-usage: git cdflow tree status
+usage: git cdflow tree [--no-fetch] status
 
         status  For each release check if the last commit of the parent branch 
                 has been merged in.
@@ -22,10 +22,19 @@ MESSAGE
 
 (define fetch? (make-parameter #t))
 
+(define (display-status-errors errors)
+  (display "Family tree missing merges:\n")
+  (for ([row errors])
+    (display (format "~a\tnot merged in ~a\n" (cadr row) (caddr row)))))
+
+(define (display-no-errors)
+    (display "Family tree is ok!\n"))
+
 (define (status)
   (when (fetch?) (git-fetch))
-  (for ([row (tree-status ".")])
-    (display (format "~a has not been merged in ~a\n" (cadr row) (caddr row)))))
+  (match (tree-status ".")  
+    ['() (display-no-errors)]
+    [errors (display-status-errors errors)]))
 
 (define (main)
   (let ([command (command-line 
