@@ -174,10 +174,10 @@
   (sh "git push origin refs/notes/cdflow"))
 
 (define (git-remote-branch-exists branch-name)
-  (sh->bool (format "git show-ref refs/remotes/origin/~a" branch-name)))
+  (non-empty-string? (sh->string (format "git branch -r --list \"origin/~a\"" branch-name))))
 
 (define (git-local-branch-exists branch-name)
-  (sh->bool (format "git show-ref refs/heads/~a" branch-name)))
+  (non-empty-string? (sh->string (format "git branch -l --list \"~a\"" branch-name))))
 
 (define (git-remote-commits repo-path)
   (map (lambda (lst) (list (string-replace (caddr lst) "refs/remotes/origin/" "") (car lst))) 

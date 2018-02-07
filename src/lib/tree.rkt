@@ -35,6 +35,12 @@
 
 (define (tree-status path)
   (let* ([releases-edges (filter (lambda (edge) (release-branch? (cadr edge))) (git-notes-parents->pairs path))]
+         [releases-edges-remote (filter (lambda (edge) (andmap git-remote-branch-exists edge)) releases-edges)]
          [commits (apply hash (flatten (git-remote-commits path)))]
-         [releases-commit (map (lambda (edge) (cons (hash-ref commits (car edge) #f) edge)) releases-edges)])
-    (filter (lambda (row) (and (car row) (not (git-remote-branch-contains-commit? path (caddr row) (car row))))) releases-commit)))
+         [releases-commit (map (lambda (edge) (cons (hash-ref commits (car edge) #f) edge)) releases-edges-remote)])
+    (filter 
+      (lambda (row) 
+        (and 
+          (car row)
+          (not (git-remote-branch-contains-commit? path (caddr row) (car row))))) 
+      releases-commit)))
