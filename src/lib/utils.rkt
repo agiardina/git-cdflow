@@ -56,8 +56,10 @@
           (printf "    \033[90m~a\033[0m\n" item)))
         items)))
 
-(define (clear-terminal-screen)
-  (with-charterm (charterm-clear-screen)))
+(define (clear-terminal-screen) 
+  (with-charterm 
+    (unless (equal? (charterm-protocol (current-charterm)) 'ascii)
+      (charterm-clear-screen))))
 
 (define (show-menu title items [n-active 0])
   (clear-terminal-screen)

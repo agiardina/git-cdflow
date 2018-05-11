@@ -92,7 +92,7 @@ MESSAGE
 (define (project-clj-set-version file version)
   (display-to-file
     (replace-clj-project-version (file->string file) version)
-    "project.clj"
+    file
     #:exists 'replace))
 
 (define (handle-clojure-project version)
@@ -106,7 +106,7 @@ MESSAGE
 (define (project-node-set-version file version)
   (display-to-file
     (replace-node-project-version (file->string file) version)
-    "package.json"
+    file
     #:exists 'replace))
 
 (define (package.json)
@@ -115,9 +115,7 @@ MESSAGE
 (define (handle-node-project version)
   (let ([file (package.json)])
     (cond [file (project-node-set-version file version)
-                (git-commit file "Version number updated")
-                ;; (display (file->string file))
-                ]
+                (git-commit file "Version number updated")]
           [else #f])))
 
 (define (pom.xml)
@@ -162,8 +160,7 @@ MESSAGE
 
     (cond
       [(push?) (git-push-origin new-branch)
-               (git-notes-push)])
-    ))
+               (git-notes-push)])))
 
 (define (display-help)
   (display help))
@@ -190,8 +187,8 @@ MESSAGE
        (git-notes-push)]
     [else (display-err "You are not in a release branch.\n")]))
 
-(define (main)
 
+(define (main)
   ;; (handle-node-project "3")
   (let-values (
     [(action version base)
@@ -208,4 +205,8 @@ MESSAGE
       [(equal? action "push") (push)]
       [(equal? action "start") (create-release version base)])))
 
-(void (main))
+;; (void (main))
+
+
+
+
