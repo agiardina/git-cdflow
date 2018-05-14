@@ -205,8 +205,4 @@ MESSAGE
       [(equal? action "push") (push)]
       [(equal? action "start") (create-release version base)])))
 
-;; (void (main))
-
-
-
-
+ (void (main))
