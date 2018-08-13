@@ -8,9 +8,13 @@
 
 (define help #<<MESSAGE
 usage: git cdflow tree [--no-fetch] status
+       git cdflow tree [--no-fetch] show
 
         status  For each release check if the last commit of the parent branch 
                 has been merged in.
+
+        show    Show the tree on command line
+
 
 OPTIONS
         --no-fetch
@@ -36,6 +40,10 @@ MESSAGE
     ['() (display-no-errors)]
     [errors (display-status-errors errors)]))
 
+(define (show)
+  (when (fetch?) (git-fetch))
+  (visualize-tree (make-tree (branches-edges "."))))
+
 (define (main)
   (let ([command (command-line 
     #:program "git-cdflow-tree"
@@ -44,6 +52,7 @@ MESSAGE
     command)])
     (match command
       ["help" (display help)]
-      ["status" (status)])))
+      ["status" (status)]
+      ["show" (show)])))
 
 (void (main))

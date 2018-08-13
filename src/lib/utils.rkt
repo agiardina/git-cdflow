@@ -178,6 +178,12 @@
 (define (git-remote-branch-exists branch-name)
   (non-empty-string? (sh->string (format "git branch -r --list \"origin/~a\"" branch-name))))
 
+(define (git-remote-branch-exists? repo-path branch-name)
+  (non-empty-string? (sh->string (format "cd ~a; git branch -r --list \"origin/~a\"" repo-path branch-name))))
+
+(define (git-remote-branches-list repo-path)
+  (map (lambda (row) (string-replace row #px"\\s*origin/" "")) (sh->list (format "cd ~a; git branch -r --list" repo-path))))
+
 (define (git-local-branch-exists branch-name)
   (non-empty-string? (sh->string (format "git branch -l --list \"~a\"" branch-name))))
 
