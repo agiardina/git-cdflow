@@ -62,7 +62,13 @@ before_script:
 
 # Here supply steps such as raco make, raco test, etc.
 script:
-  - build.sh
+  - raco exe -o git-cdflow src/git-cdflow.rkt
+  - raco exe -o git-cdflow-parent src/git-cdflow-parent.rkt
+  - raco exe -o git-cdflow-release src/git-cdflow-release.rkt
+  - raco exe -o git-cdflow-feature src/git-cdflow-feature.rkt
+  - raco exe -o git-cdflow-issue src/git-cdflow-issue.rkt
+  - raco exe -o git-cdflow-tree src/git-cdflow-tree.rkt
+  - raco distribute git-cdflow git-cdflow git-cdflow-parent git-cdflow-release git-cdflow-feature git-cdflow-issue git-cdflow-tree
 
 # OR: If your repo is a Racket package with an info.rkt that includes
 # some `deps`:
@@ -73,3 +79,4 @@ script:
 # - raco test -x -p <your-package-name>
 
 after_script:
+
