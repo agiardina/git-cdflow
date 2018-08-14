@@ -99,9 +99,31 @@ git cdflow parent set feature/my-cutting-edge-feature
 Uhm, the situation is becoming a little hot here, let's show the tree
 ```bash
 git cdflow tree show
-``` 
+```
+
+```bash
++-release/v10.0.0
+  |
+  +-feature/my-useless-feature
+  |
+  +-release/v10.5.0
+    |
+    +-feature/my-cutting-edge-feature
+      |
+      +-release/v11.0.0
+        |
+        +-release/v12.0.0      
+```
 
 Let's check if everyone did homework and parent pull
 ```bash
 git cdflow tree status
+```
+
+Ooopsss
+
+```bash
+Family tree missing merges:
+release/v11.0.0	not merged in release/v12.0.0
+release/v10.0.0 not merged in feature/my-useless-feature
 ```
