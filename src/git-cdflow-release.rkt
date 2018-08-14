@@ -24,9 +24,9 @@ usage: git cdflow release list
         start     Start a new release.                                                           
                   The <version> parameter is mandatory but it's possible                         
                   to specify partial version name.                                               
-                  All the following version names are valid: v8.2.3, 8, 8.2, 
-                  8.2.3.              
-                  In all the above scenarios the branch release/v8.2.3 will be                   
+                  All the following version names are valid: v8.0.0, 8, 8.0, 
+                  8.0.0.              
+                  In all the above scenarios the branch release/v8.0.0 will be                   
                   created.                                                                       
                                                                                                  
                   The <base> parameter is optional and it's intended for 
