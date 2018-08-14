@@ -49,7 +49,7 @@ before_script:
 
 # Here supply steps such as raco make, raco test, etc.
 script:
-  - raco pkg install charterm
+  - raco pkg install --batch charterm
   - raco exe -o git-cdflow src/git-cdflow.rkt
   - raco exe -o git-cdflow-parent src/git-cdflow-parent.rkt
   - raco exe -o git-cdflow-release src/git-cdflow-release.rkt
