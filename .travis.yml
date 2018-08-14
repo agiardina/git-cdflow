@@ -22,19 +22,6 @@ env:
     # versions.
     #
     # The RELEASE snapshot is only available during the release process.
-    - RACKET_VERSION=6.1
-    - RACKET_VERSION=6.1.1
-    - RACKET_VERSION=6.2
-    - RACKET_VERSION=6.3
-    - RACKET_VERSION=6.4
-    - RACKET_VERSION=6.5
-    - RACKET_VERSION=6.6
-    - RACKET_VERSION=6.7
-    - RACKET_VERSION=6.8
-    - RACKET_VERSION=6.9
-    - RACKET_VERSION=6.10
-    - RACKET_VERSION=6.11
-    - RACKET_VERSION=6.12
     - RACKET_VERSION=7.0
     - RACKET_VERSION=HEAD
     - RACKET_VERSION=RELEASE
@@ -62,6 +49,7 @@ before_script:
 
 # Here supply steps such as raco make, raco test, etc.
 script:
+  - raco pkg install charterm
   - raco exe -o git-cdflow src/git-cdflow.rkt
   - raco exe -o git-cdflow-parent src/git-cdflow-parent.rkt
   - raco exe -o git-cdflow-release src/git-cdflow-release.rkt
